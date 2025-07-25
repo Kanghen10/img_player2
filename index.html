@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>IMG Stream Fullscreen</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #player {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+      background: black;
+    }
+
+    #message {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 1.4em;
+      text-align: center;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="message">Memuat stream gambar CCTV...</div>
+  <img id="player" alt="CCTV Snapshot" />
+
+  <script>
+    const hash = window.location.hash.substring(1);
+    const imageUrl = decodeURIComponent(hash);
+    const img = document.getElementById("player");
+    const msg = document.getElementById("message");
+
+    function enterFullscreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+      else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+    }
+
+    if (!imageUrl || !imageUrl.startsWith("http")) {
+      msg.innerHTML = "URL gambar tidak ditemukan.<br>Gunakan format:<br><code>#http://link-gambar</code>";
+    } else {
+      img.style.display = "block";
+      msg.style.display = "none";
+
+      function refreshImage() {
+        const urlWithTimestamp = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 'ts=' + Date.now();
+        img.src = urlWithTimestamp;
+
+        // Tambahkan deteksi gagal load
+        img.onerror = () => {
+          msg.innerText = "CCTV sedang Offline";
+          msg.style.display = "block";
+          img.style.display = "none";
+        };
+
+        img.onload = () => {
+          msg.style.display = "none";
+          img.style.display = "block";
+        };
+      }
+
+      refreshImage();
+      setInterval(refreshImage, 500);
+
+      window.addEventListener("load", () => {
+        setTimeout(enterFullscreen, 100);
+      });
+    }
+  </script>
+</body>
+</html>
